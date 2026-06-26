@@ -8,20 +8,15 @@ steps:
 
 - checkout: self
 
-- powershell: |
-    docker build -t calendarapp:latest .
-  displayName: Build Docker Image
+- script: docker build -t calendarapp:latest .
+  displayName: "Build Docker Image"
 
-- powershell: |
-    docker stop calendarapp
-    docker rm calendarapp
+- script: docker rm -f calendarapp
+  displayName: "Remove Old Container"
   continueOnError: true
-  displayName: Remove Old Container
 
-- powershell: |
-    docker run -d --name calendarapp -p 8080:80 calendarapp:latest
-  displayName: Run Docker Container
+- script: docker run -d --name calendarapp -p 8080:80 calendarapp:latest
+  displayName: "Run Docker Container"
 
-- powershell: |
-    docker ps
-  displayName: Show Running Containers
+- script: docker ps
+  displayName: "Show Running Containers"
