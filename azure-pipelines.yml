@@ -5,25 +5,41 @@
 trigger:
 - main
 
-resources:
-- repo: self
+pool:
+  name: Dockernewagent
 
 variables:
-  tag: '$(Build.BuildId)'
+  imageName: calendarapp
+  tag: $(Build.BuildId)
 
-stages:
-- stage: Build
-  displayName: Build image
-  jobs:
-  - job: Build
-    displayName: Build
-    pool:
-      name: Dockernewagent
-    steps:
-    - task: Docker@2
-      displayName: Build an image
-      inputs:
-        command: build
-        dockerfile: '$(Build.SourcesDirectory)/Dockerfile'
-        tags: |
-          $(tag)
+steps:
+
+# GitHub code checkout
+- checkout: self
+
+# Docker Build
+- task: Docker@2
+  displayName: Build Docker Image
+  inputs:
+    command: build
+    repository: $(imageName)
+    dockerfile: Dockerfile
+    tags: |
+      $(tag)
+
+# Old Container Remove
+- powershell: |
+    docker stop calendarapp 2>$null
+    docker rm calendarapp 2>$null
+  displayName: Remove Old Container
+
+# Run Container
+- powershell: |
+    docker run -d --name calendarapp -p 8080:80 $(imageName):$(tag)
+  displayName: Run Docker Container
+
+# Verify
+- powershell: |
+    docker ps
+    docker images
+  displayName: Verify
