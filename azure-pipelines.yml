@@ -1,45 +1,27 @@
-# Docker
-# Build a Docker image
-# https://docs.microsoft.com/azure/devops/pipelines/languages/docker
-
 trigger:
 - main
 
 pool:
   name: Dockernewagent
 
-variables:
-  imageName: calendarapp
-  tag: $(Build.BuildId)
-
 steps:
 
-# GitHub code checkout
 - checkout: self
 
-# Docker Build
-- task: Docker@2
-  displayName: Build Docker Image
-  inputs:
-    command: build
-    repository: $(imageName)
-    dockerfile: Dockerfile
-    tags: |
-      $(tag)
-
-# Old Container Remove
 - powershell: |
-    docker stop calendarapp 2>$null
-    docker rm calendarapp 2>$null
+    docker build -t calendarapp:latest .
+  displayName: Build Docker Image
+
+- powershell: |
+    docker stop calendarapp
+    docker rm calendarapp
+  continueOnError: true
   displayName: Remove Old Container
 
-# Run Container
 - powershell: |
-    docker run -d --name calendarapp -p 8080:80 $(imageName):$(tag)
+    docker run -d --name calendarapp -p 8080:80 calendarapp:latest
   displayName: Run Docker Container
 
-# Verify
 - powershell: |
     docker ps
-    docker images
-  displayName: Verify
+  displayName: Show Running Containers
